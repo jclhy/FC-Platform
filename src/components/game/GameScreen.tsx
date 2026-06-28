@@ -131,6 +131,8 @@ const GameScreen: React.FC = () => {
     const canvas = canvasRef.current
     if (!canvas) return
 
+    let destroyed = false
+
     // 获取当前游戏条目
     const game = currentCartridge?.games[selectedGameIndex]
     if (!game?.romPath) {
@@ -154,34 +156,36 @@ const GameScreen: React.FC = () => {
     buf8Ref.current = buf8
     buf32Ref.current = buf32
 
-    // --- 音频初始化 ---
-    let audioCtx: AudioContext | null = null
+    // 先画一帧黑色，避免白闪
+    imageData.data.set(buf8)
+    ctx.putImageData(imageData, 0, 0)
+
+    // --- 音频初始化（异步，不阻塞 ROM 加载） ---
     let gainNode: GainNode | null = null
 
     const initAudio = async () => {
       try {
-        audioCtx = nesSynth.getAudioContext()
+        const audioCtx = nesSynth.getAudioContext()
         if (audioCtx.state === 'suspended') {
           await audioCtx.resume()
         }
 
-        // 加载 AudioWorklet 处理器
         const blob = new Blob([AUDIO_WORKLET_CODE], { type: 'application/javascript' })
         const url = URL.createObjectURL(blob)
-        await audioCtx!.audioWorklet.addModule(url)
+        await audioCtx.audioWorklet.addModule(url)
         URL.revokeObjectURL(url)
 
-        // 创建 WorkletNode 并连接到音频图
-        const node = new AudioWorkletNode(audioCtx!, 'nes-game-audio-processor', {
+        if (destroyed) return
+
+        const node = new AudioWorkletNode(audioCtx, 'nes-game-audio-processor', {
           outputChannelCount: [2],
         })
 
-        // 增益节点控制游戏音量
-        gainNode = audioCtx!.createGain()
+        gainNode = audioCtx.createGain()
         gainNode.gain.value = masterVolume * 0.8
 
         node.connect(gainNode)
-        gainNode.connect(audioCtx!.destination)
+        gainNode.connect(audioCtx.destination)
 
         workletNodeRef.current = node
       } catch (e) {
@@ -189,18 +193,19 @@ const GameScreen: React.FC = () => {
       }
     }
 
-    const audioReady = initAudio()
+    // 音频在后台初始化，不阻塞画面
+    initAudio()
 
     // --- JSNES 实例 ---
     const nes = new NES({
       onFrame: (buffer: Uint32Array) => {
+        if (destroyed) return
         // 将 JSNES BGR 格式像素转换为 Canvas ABGR 格式
         const b32 = buf32Ref.current
         if (!b32) return
         for (let i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; i++) {
           b32[i] = 0xff000000 | buffer[i]
         }
-        // 写入 canvas
         imageData.data.set(buf8Ref.current!)
         ctx.putImageData(imageData, 0, 0)
       },
@@ -231,73 +236,78 @@ const GameScreen: React.FC = () => {
 
     nesRef.current = nes
 
-    // --- 加载 ROM ---
-    const loadRom = async () => {
-      await audioReady // 确保音频先就绪
-
+    // --- 加载 ROM，成功后才启动游戏循环 ---
+    const startEmulator = async () => {
       const api = (window as any).electronAPI
       if (!api?.loadRomData) {
-        setError('需要 Electron 环境才能加载 ROM')
+        if (!destroyed) setError('需要 Electron 环境才能加载 ROM')
         return
       }
 
       try {
         const romData: Uint8Array | null = await api.loadRomData(game.romPath!)
+        if (destroyed) return
+
         if (!romData) {
           setError(`无法读取 ROM 文件:\n${game.romPath}`)
           return
         }
+
         nes.loadROM(romData)
+        if (destroyed) return
       } catch (e) {
-        setError(`ROM 加载失败:\n${e instanceof Error ? e.message : String(e)}`)
+        if (!destroyed) {
+          setError(`ROM 加载失败:\n${e instanceof Error ? e.message : String(e)}`)
+        }
+        return
       }
-    }
 
-    loadRom()
+      // ROM 加载成功，启动游戏主循环
+      const gameLoop = () => {
+        if (destroyed) return
 
-    // --- 游戏主循环 ---
-    const gameLoop = () => {
-      if (!pausedRef.current) {
-        // 轮询输入
-        const actions = Object.keys(ACTION_TO_BUTTON)
-        for (const action of actions) {
-          const btn = ACTION_TO_BUTTON[action]
-          const pressed = inputManager.isAction(action as any, 1)
-          const wasPressed = prevButtonsRef.current[action] || false
+        if (!pausedRef.current) {
+          // 轮询输入
+          const actions = Object.keys(ACTION_TO_BUTTON)
+          for (const action of actions) {
+            const btn = ACTION_TO_BUTTON[action]
+            const pressed = inputManager.isAction(action as any, 1)
+            const wasPressed = prevButtonsRef.current[action] || false
 
-          if (pressed && !wasPressed) {
-            nes.buttonDown(1, btn as any)
-          } else if (!pressed && wasPressed) {
-            nes.buttonUp(1, btn as any)
+            if (pressed && !wasPressed) {
+              nes.buttonDown(1, btn as any)
+            } else if (!pressed && wasPressed) {
+              nes.buttonUp(1, btn as any)
+            }
+
+            prevButtonsRef.current[action] = pressed
           }
 
-          prevButtonsRef.current[action] = pressed
+          // 运行一帧
+          try {
+            nes.frame()
+          } catch (e) {
+            console.error('[GameScreen] NES frame error:', e)
+          }
         }
 
-        // 运行一帧
-        try {
-          nes.frame()
-        } catch (e) {
-          console.error('[GameScreen] NES frame error:', e)
-        }
+        rafRef.current = requestAnimationFrame(gameLoop)
       }
 
       rafRef.current = requestAnimationFrame(gameLoop)
     }
 
-    rafRef.current = requestAnimationFrame(gameLoop)
+    startEmulator()
 
     // --- Escape 键返回菜单 ---
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Escape') {
         e.preventDefault()
-        // 释放所有按键
         for (const action of Object.keys(ACTION_TO_BUTTON)) {
           nes.buttonUp(1, ACTION_TO_BUTTON[action] as any)
         }
         resetConsole()
       }
-      // P 键暂停/继续
       if (e.code === 'KeyP' && !e.repeat) {
         pausedRef.current = !pausedRef.current
         setIsPaused(pausedRef.current)
@@ -308,17 +318,16 @@ const GameScreen: React.FC = () => {
 
     // --- 清理 ---
     return () => {
+      destroyed = true
       cancelAnimationFrame(rafRef.current)
       window.removeEventListener('keydown', handleKeyDown)
 
-      // 释放所有按键状态
       if (nesRef.current) {
         for (const action of Object.keys(ACTION_TO_BUTTON)) {
           nesRef.current.buttonUp(1, ACTION_TO_BUTTON[action] as any)
         }
       }
 
-      // 断开音频
       if (workletNodeRef.current) {
         workletNodeRef.current.disconnect()
         workletNodeRef.current = null
