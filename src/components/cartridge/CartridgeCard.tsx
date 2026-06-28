@@ -154,7 +154,7 @@ const CartridgeCard: React.FC<CartridgeCardProps> = ({
               <div
                 style={{
                   fontFamily: "'Press Start 2P', monospace",
-                  fontSize: 14,
+                  fontSize: 18,
                   fontWeight: 700,
                   color: '#CC2200',
                   lineHeight: 1,
@@ -170,7 +170,7 @@ const CartridgeCard: React.FC<CartridgeCardProps> = ({
               <div
                 style={{
                   fontFamily: "'Press Start 2P', monospace",
-                  fontSize: 7,
+                  fontSize: 11,
                   color: '#CC2200',
                   lineHeight: 1,
                   marginBottom: 6,
@@ -185,7 +185,7 @@ const CartridgeCard: React.FC<CartridgeCardProps> = ({
             <div
               style={{
                 fontFamily: "'Press Start 2P', 'Zpix', monospace",
-                fontSize: isMulticart ? 6 : 8,
+                fontSize: isMulticart ? 10 : 12,
                 color: '#222',
                 textAlign: 'center',
                 lineHeight: 1.5,
@@ -206,7 +206,7 @@ const CartridgeCard: React.FC<CartridgeCardProps> = ({
               <div
                 style={{
                   marginTop: 4,
-                  fontSize: 5,
+                  fontSize: 9,
                   fontFamily: "'Press Start 2P', monospace",
                   color: '#888',
                   letterSpacing: 1,
@@ -289,7 +289,7 @@ const CartridgeCard: React.FC<CartridgeCardProps> = ({
           <div
             style={{
               fontFamily: "'Press Start 2P', monospace",
-              fontSize: 7,
+              fontSize: 11,
               color: '#FFD700',
               textAlign: 'center',
               lineHeight: 1.8,
@@ -298,7 +298,7 @@ const CartridgeCard: React.FC<CartridgeCardProps> = ({
           >
             INSERT
             <br />
-            <span style={{ fontSize: 5, color: '#ccc' }}>double-click</span>
+            <span style={{ fontSize: 9, color: '#ccc' }}>double-click</span>
           </div>
         </div>
       </div>
@@ -318,7 +318,7 @@ const CartridgeCard: React.FC<CartridgeCardProps> = ({
             boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
             padding: '4px 0',
             fontFamily: "'Press Start 2P', monospace",
-            fontSize: 7,
+            fontSize: 11,
           }}
           onClick={(e) => e.stopPropagation()}
         >

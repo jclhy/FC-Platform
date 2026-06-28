@@ -166,7 +166,7 @@ const FamicomConsole: React.FC = () => {
               )}
               <span style={{
                 color: '#333',
-                fontSize: 10,
+                fontSize: 14,
                 fontFamily: "'Press Start 2P', monospace",
                 letterSpacing: 2,
                 textAlign: 'center',
@@ -197,7 +197,7 @@ const FamicomConsole: React.FC = () => {
           bottom: 2,
           left: '50%',
           transform: 'translateX(-50%)',
-          fontSize: 7,
+          fontSize: 11,
           color: '#444',
           fontFamily: 'Arial, sans-serif',
           letterSpacing: 3,
@@ -283,7 +283,7 @@ const FamicomConsole: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: 6,
+                    fontSize: 10,
                     fontFamily: "'Press Start 2P', monospace",
                     color: '#222',
                     letterSpacing: 0.5,
@@ -316,7 +316,7 @@ const FamicomConsole: React.FC = () => {
                 justifyContent: 'center',
               }}>
                 <span style={{
-                  fontSize: 7,
+                  fontSize: 11,
                   color: '#FFD700',
                   fontFamily: "'Press Start 2P', monospace",
                 }}>DROP HERE</span>
@@ -415,7 +415,7 @@ const FamicomConsole: React.FC = () => {
                 position: 'absolute',
                 left: 110,
                 top: -4,
-                fontSize: 6,
+                fontSize: 10,
                 color: 'rgba(255,255,255,0.4)',
                 fontFamily: 'Arial, sans-serif',
                 fontWeight: 700,
@@ -452,7 +452,7 @@ const FamicomConsole: React.FC = () => {
               padding: '0 8px',
             }}>
               <div style={{
-                fontSize: 7,
+                fontSize: 11,
                 letterSpacing: 4,
                 fontFamily: 'Arial, sans-serif',
                 fontWeight: 700,
@@ -478,7 +478,7 @@ const FamicomConsole: React.FC = () => {
             {/* Power switch */}
             <div className="flex flex-col items-center gap-1">
               <span style={{
-                fontSize: 5,
+                fontSize: 9,
                 letterSpacing: 1.5,
                 color: 'rgba(0,0,0,0.35)',
                 fontFamily: 'Arial, sans-serif',
@@ -506,7 +506,7 @@ const FamicomConsole: React.FC = () => {
 
               {/* Power labels */}
               <div className="flex justify-between w-full" style={{
-                fontSize: 4,
+                fontSize: 8,
                 color: 'rgba(0,0,0,0.25)',
                 fontFamily: 'Arial, sans-serif',
               }}>
@@ -519,7 +519,7 @@ const FamicomConsole: React.FC = () => {
             <div className="flex flex-col items-center gap-1">
               <div className={`led-indicator ${powerOn ? 'on' : ''}`} />
               <span style={{
-                fontSize: 4,
+                fontSize: 8,
                 color: 'rgba(0,0,0,0.25)',
                 fontFamily: 'Arial, sans-serif',
               }}>
@@ -538,7 +538,7 @@ const FamicomConsole: React.FC = () => {
                 style={{ width: 22, height: 22 }}
               />
               <span style={{
-                fontSize: 5,
+                fontSize: 9,
                 letterSpacing: 1,
                 color: 'rgba(0,0,0,0.35)',
                 fontFamily: 'Arial, sans-serif',
@@ -630,7 +630,7 @@ const ControllerCradle: React.FC<ControllerCradleProps> = ({ label }) => (
     <span style={{
       position: 'absolute',
       bottom: -8,
-      fontSize: 5,
+      fontSize: 9,
       color: 'rgba(0,0,0,0.25)',
       fontFamily: 'Arial, sans-serif',
       fontWeight: 700,

@@ -300,7 +300,7 @@ const GameListMenu: React.FC = () => {
           <h1
             className="game-menu-title"
             style={{
-              fontSize: 16,
+              fontSize: 20,
               letterSpacing: 3,
               lineHeight: 1.6,
               margin: 0,
@@ -317,7 +317,7 @@ const GameListMenu: React.FC = () => {
             gap: 4,
             marginTop: 2,
           }}>
-            <span style={{ color: '#FFAA00', fontSize: 7 }}>*</span>
+            <span style={{ color: '#FFAA00', fontSize: 11 }}>*</span>
             <div style={{
               height: 2,
               width: '55%',
@@ -325,7 +325,7 @@ const GameListMenu: React.FC = () => {
                 transparent, ${BORDER_INNER_COLOR} 15%, #FFF 50%,
                 ${BORDER_INNER_COLOR} 85%, transparent)`,
             }} />
-            <span style={{ color: '#FFAA00', fontSize: 7 }}>*</span>
+            <span style={{ color: '#FFAA00', fontSize: 11 }}>*</span>
           </div>
         </div>
 
@@ -350,7 +350,7 @@ const GameListMenu: React.FC = () => {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  fontSize: 9,
+                  fontSize: 13,
                   letterSpacing: 1,
                   lineHeight: 1.2,
                   padding: '3px 6px',
@@ -374,7 +374,7 @@ const GameListMenu: React.FC = () => {
                   style={{
                     width: 14,
                     flexShrink: 0,
-                    fontSize: 9,
+                    fontSize: 13,
                     textAlign: 'center',
                     // When not selected, render invisible placeholder to keep alignment
                     color: isSelected ? '#000000' : 'transparent',
@@ -425,7 +425,7 @@ const GameListMenu: React.FC = () => {
         }}>
           {/* Control hints */}
           <div style={{
-            fontSize: 6,
+            fontSize: 10,
             color: '#7575B8',
             letterSpacing: 0.5,
             lineHeight: 1.6,
@@ -440,7 +440,7 @@ const GameListMenu: React.FC = () => {
 
           {/* Page indicator */}
           <div className="game-menu-page" style={{
-            fontSize: 7,
+            fontSize: 11,
             letterSpacing: 2,
           }}>
             PAGE {menuPage + 1}/{totalPages}

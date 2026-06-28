@@ -115,7 +115,7 @@ const CartridgeShelf: React.FC = () => {
           <h2
             style={{
               fontFamily: "'Press Start 2P', 'Zpix', monospace",
-              fontSize: 12,
+              fontSize: 16,
               color: '#FFD700',
               letterSpacing: 1,
               textShadow: '0 2px 4px rgba(0,0,0,0.5)',
@@ -137,7 +137,7 @@ const CartridgeShelf: React.FC = () => {
               border: 'none',
               borderRadius: 4,
               color: '#1a1a2e',
-              fontSize: 18,
+              fontSize: 22,
               fontWeight: 700,
               fontFamily: 'Arial, sans-serif',
               cursor: 'pointer',
@@ -161,7 +161,7 @@ const CartridgeShelf: React.FC = () => {
                 flex: 1,
                 padding: '5px 0',
                 fontFamily: "'Press Start 2P', 'Zpix', monospace",
-                fontSize: 7,
+                fontSize: 11,
                 color: filter === tab.key ? '#1a1a2e' : '#AAA',
                 background: filter === tab.key
                   ? 'linear-gradient(180deg, #FFD700, #DAA520)'
@@ -191,7 +191,7 @@ const CartridgeShelf: React.FC = () => {
             className="shelf-search-input w-full"
             style={{
               fontFamily: "'Press Start 2P', 'Zpix', monospace",
-              fontSize: 8,
+              fontSize: 12,
               padding: '7px 10px 7px 28px',
               background: 'rgba(255,255,255,0.07)',
               border: '1px solid rgba(255,255,255,0.12)',
@@ -208,7 +208,7 @@ const CartridgeShelf: React.FC = () => {
               left: 9,
               top: '50%',
               transform: 'translateY(-50%)',
-              fontSize: 11,
+              fontSize: 15,
               color: '#666',
               pointerEvents: 'none',
               lineHeight: 1,
@@ -273,7 +273,7 @@ const CartridgeShelf: React.FC = () => {
             >
               <span
                 style={{
-                  fontSize: 24,
+                  fontSize: 28,
                   color: '#444',
                   fontFamily: 'Arial, sans-serif',
                   lineHeight: 1,
@@ -300,7 +300,7 @@ const CartridgeShelf: React.FC = () => {
             <p
               style={{
                 fontFamily: "'Press Start 2P', 'Zpix', monospace",
-                fontSize: 8,
+                fontSize: 12,
                 color: '#666',
                 textAlign: 'center',
                 lineHeight: 2,
@@ -329,7 +329,7 @@ const CartridgeShelf: React.FC = () => {
         <span
           style={{
             fontFamily: "'Press Start 2P', monospace",
-            fontSize: 7,
+            fontSize: 11,
             color: '#888',
             letterSpacing: 0.5,
           }}
@@ -347,7 +347,7 @@ const CartridgeShelf: React.FC = () => {
             title="导入卡带包 (.fcpack)"
             style={{
               fontFamily: "'Press Start 2P', monospace",
-              fontSize: 6,
+              fontSize: 10,
               color: '#AAA',
               background: 'rgba(255,255,255,0.06)',
               border: '1px solid rgba(255,255,255,0.12)',
@@ -365,7 +365,7 @@ const CartridgeShelf: React.FC = () => {
             title="导出选中卡带为 .fcpack"
             style={{
               fontFamily: "'Press Start 2P', monospace",
-              fontSize: 6,
+              fontSize: 10,
               color: '#AAA',
               background: 'rgba(255,255,255,0.06)',
               border: '1px solid rgba(255,255,255,0.12)',
