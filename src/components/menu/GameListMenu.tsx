@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { useAppStore } from '@/store/use-app-store'
 import { nesSynth } from '@/audio/nes-synth'
 import { useSettingsStore } from '@/store/use-settings-store'
+import { inputManager } from '@/input/input-manager'
 
 // ============================================================================
 // GameListMenu -- Authentic Famicom multi-cart (多合一) game selection screen
@@ -211,35 +212,51 @@ const GameListMenu: React.FC = () => {
     ejectCartridge()
   }, [ejectCartridge, playSound])
 
-  // ---- Keyboard listener ----
+  // ---- Unified input loop (keyboard + gamepad) ----
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore key repeats so holding a key doesn't turbo-scroll
-      if (e.repeat) return
+    let rafId: number
+    let running = true
 
-      const action = MENU_KEY_MAP[e.code]
-      if (!action) return
+    const loop = () => {
+      if (!running) return
 
-      // Prevent default browser behaviour for handled keys (e.g. arrow scroll)
-      e.preventDefault()
+      // inputManager.update() is already called in App.tsx's rAF loop,
+      // but we also call it here as a safety net for when the component
+      // mounts before App's loop starts.
+      // We only need to poll the already-updated state.
 
-      // Ensure AudioContext is running (browser autoplay policy)
       nesSynth.resume()
 
-      switch (action) {
-        case 'up':     moveUp();     break
-        case 'down':   moveDown();   break
-        case 'left':   goPrevPage(); break
-        case 'right':  goNextPage(); break
-        case 'a':
-        case 'start':  confirm();    break
-        case 'b':
-        case 'select': goBack();     break
+      // Check each action via inputManager (covers both keyboard & gamepad)
+      if (inputManager.isActionJustPressed('up')) {
+        moveUp()
+      } else if (inputManager.isActionJustPressed('down')) {
+        moveDown()
+      } else if (inputManager.isActionJustPressed('left')) {
+        goPrevPage()
+      } else if (inputManager.isActionJustPressed('right')) {
+        goNextPage()
+      } else if (
+        inputManager.isActionJustPressed('a') ||
+        inputManager.isActionJustPressed('start')
+      ) {
+        confirm()
+      } else if (
+        inputManager.isActionJustPressed('b') ||
+        inputManager.isActionJustPressed('select')
+      ) {
+        goBack()
       }
+
+      rafId = requestAnimationFrame(loop)
     }
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    rafId = requestAnimationFrame(loop)
+
+    return () => {
+      running = false
+      cancelAnimationFrame(rafId)
+    }
   }, [moveUp, moveDown, goNextPage, goPrevPage, confirm, goBack])
 
   // ---- Guard: nothing to render if no cartridge ----
@@ -372,7 +389,7 @@ const GameListMenu: React.FC = () => {
                 <span
                   className={isSelected ? 'game-menu-cursor' : ''}
                   style={{
-                    width: 14,
+                    width: 18,
                     flexShrink: 0,
                     fontSize: 13,
                     textAlign: 'center',
@@ -386,10 +403,10 @@ const GameListMenu: React.FC = () => {
 
                 {/* Zero-padded game number */}
                 <span style={{
-                  width: 30,
+                  width: 40,
                   flexShrink: 0,
                   textAlign: 'right',
-                  marginRight: 8,
+                  marginRight: 14,
                   // Slightly dimmer for non-selected rows
                   opacity: isSelected ? 1 : 0.7,
                   fontVariantNumeric: 'tabular-nums',

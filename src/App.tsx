@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import FamicomConsole from './components/console/FamicomConsole'
 import CartridgeShelf from './components/cartridge/CartridgeShelf'
 import { useAppStore } from './store/use-app-store'
@@ -14,6 +14,17 @@ import { nesSynth } from './audio/nes-synth'
 export default function App() {
   const view = useAppStore((s) => s.view)
   const isTransitioning = useAppStore((s) => s.isTransitioning)
+
+  // 手柄连接状态提示
+  const [gamepadToast, setGamepadToast] = useState<{
+    message: string
+    visible: boolean
+  }>({ message: '', visible: false })
+
+  const showToast = useCallback((message: string) => {
+    setGamepadToast({ message, visible: true })
+    setTimeout(() => setGamepadToast((prev) => ({ ...prev, visible: false })), 3000)
+  }, [])
 
   // 初始化：加载数据、启动输入管理器
   useEffect(() => {
@@ -32,22 +43,36 @@ export default function App() {
     }
     rafId = requestAnimationFrame(loop)
 
+    // 手柄连接/断开提示
+    inputManager.onGamepadConnect((info) => {
+      console.log('[Gamepad] Connected:', info.id)
+      showToast(`手柄已连接: ${info.id.slice(0, 25)}`)
+    })
+    inputManager.onGamepadDisconnect((info) => {
+      console.log('[Gamepad] Disconnected:', info.id)
+      showToast(`手柄已断开: ${info.id.slice(0, 25)}`)
+    })
+
     // 恢复 AudioContext（需要用户交互后才能播放）
     const resumeAudio = () => {
       nesSynth.resume()
       document.removeEventListener('click', resumeAudio)
       document.removeEventListener('keydown', resumeAudio)
+      // 也尝试通过手柄按钮恢复
+      document.removeEventListener('mousedown', resumeAudio)
     }
     document.addEventListener('click', resumeAudio)
     document.addEventListener('keydown', resumeAudio)
+    document.addEventListener('mousedown', resumeAudio)
 
     return () => {
       inputManager.detach()
       cancelAnimationFrame(rafId)
       document.removeEventListener('click', resumeAudio)
       document.removeEventListener('keydown', resumeAudio)
+      document.removeEventListener('mousedown', resumeAudio)
     }
-  }, [])
+  }, [showToast])
 
   // 当设置加载后同步音量
   const masterVolume = useSettingsStore((s) => s.audio.masterVolume)
@@ -79,6 +104,32 @@ export default function App() {
           <CartridgeShelf />
         </div>
       )}
+
+      {/* 手柄连接/断开提示 */}
+      <div
+        className="fixed top-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-300"
+        style={{
+          opacity: gamepadToast.visible ? 1 : 0,
+          transform: `translateX(-50%) translateY(${gamepadToast.visible ? 0 : -20}px)`,
+          pointerEvents: 'none',
+        }}
+      >
+        <div
+          style={{
+            background: 'rgba(0, 0, 0, 0.85)',
+            border: '2px solid #FFAA00',
+            borderRadius: 4,
+            padding: '10px 20px',
+            fontFamily: "'Press Start 2P', monospace",
+            fontSize: 11,
+            color: '#FFAA00',
+            whiteSpace: 'nowrap',
+            boxShadow: '0 0 12px rgba(255, 170, 0, 0.3)',
+          }}
+        >
+          🎮 {gamepadToast.message}
+        </div>
+      </div>
     </div>
   )
 }
