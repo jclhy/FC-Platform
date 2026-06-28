@@ -3,6 +3,7 @@ import { useAppStore } from '@/store/use-app-store'
 import { useSettingsStore } from '@/store/use-settings-store'
 import { useCartridgeStore } from '@/store/use-cartridge-store'
 import GameListMenu from '../menu/GameListMenu'
+import GameScreen from '../game/GameScreen'
 import type { Cartridge } from '@shared/types'
 
 // ============================================================
@@ -17,6 +18,7 @@ const FamicomConsole: React.FC = () => {
     powerOn,
     currentCartridge,
     screenEffect,
+    toast,
     ejectCartridge,
     powerToggle,
     resetConsole,
@@ -150,7 +152,7 @@ const FamicomConsole: React.FC = () => {
           {/* Screen content */}
           {showScreen ? (
             <div style={{ position: 'relative', zIndex: 10, width: '100%', height: '100%' }}>
-              <GameListMenu />
+              {view === 'game' ? <GameScreen /> : <GameListMenu />}
             </div>
           ) : (
             <div className="flex items-center justify-center w-full h-full">
@@ -174,6 +176,30 @@ const FamicomConsole: React.FC = () => {
               }}>
                 {powerOn && !currentCartridge ? 'NO CARTRIDGE' : ''}
               </span>
+            </div>
+          )}
+
+          {/* Toast notification */}
+          {toast && (
+            <div style={{
+              position: 'absolute',
+              bottom: 16,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 30,
+              background: 'rgba(0,0,0,0.85)',
+              border: '1px solid rgba(255,170,0,0.4)',
+              borderRadius: 6,
+              padding: '8px 16px',
+              maxWidth: '85%',
+              textAlign: 'center',
+              fontFamily: "'Press Start 2P', monospace",
+              fontSize: 11,
+              color: '#FFAA00',
+              lineHeight: 1.8,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+            }}>
+              {toast}
             </div>
           )}
 

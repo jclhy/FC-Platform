@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ROM管理
   selectROM: () => ipcRenderer.invoke(IPC_CHANNELS.SELECT_ROM),
   readRomBytes: (filePath: string) => ipcRenderer.invoke(IPC_CHANNELS.READ_ROM_BYTES, filePath),
+  loadRomData: (filePath: string) => ipcRenderer.invoke(IPC_CHANNELS.LOAD_ROM_DATA, filePath),
 
   // 设置
   getSettings: () => ipcRenderer.invoke(IPC_CHANNELS.GET_SETTINGS),

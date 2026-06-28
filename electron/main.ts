@@ -157,6 +157,17 @@ function setupIPC(): void {
       return null
     }
   })
+
+  // 读取完整 ROM 文件数据（用于 JSNES 加载运行）
+  ipcMain.handle(IPC_CHANNELS.LOAD_ROM_DATA, async (_event, filePath: string) => {
+    try {
+      const buffer = await readFile(filePath)
+      return new Uint8Array(buffer)
+    } catch (err) {
+      console.error('[main] LOAD_ROM_DATA failed:', err)
+      return null
+    }
+  })
 }
 
 // ============================================================

@@ -11,6 +11,7 @@ interface ElectronAPI {
   // ROM管理
   selectROM: () => Promise<string[] | null>
   readRomBytes: (filePath: string) => Promise<Uint8Array | null>
+  loadRomData: (filePath: string) => Promise<Uint8Array | null>
 
   // 设置
   getSettings: () => Promise<unknown>

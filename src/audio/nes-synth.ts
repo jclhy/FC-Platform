@@ -306,6 +306,11 @@ export class NESSynth {
   // AudioContext Management
   // -------------------------------------------------------------------------
 
+  /** Get the underlying AudioContext (for sharing with emulator audio output). */
+  getAudioContext(): AudioContext {
+    return this.ctx;
+  }
+
   /**
    * Resume the AudioContext. Browsers require a user gesture to start audio.
    * Call this on first user interaction (click/keypress).

@@ -23,6 +23,8 @@ interface AppState {
   isTransitioning: boolean
   /** 屏幕过渡特效 */
   screenEffect: ScreenEffect
+  /** Toast 提示信息 */
+  toast: string | null
 
   // --- Actions ---
   /** 切换当前视图 */
@@ -43,6 +45,8 @@ interface AppState {
   startGame: () => void
   /** 重置主机（动画回到菜单） */
   resetConsole: () => void
+  /** 清除 toast */
+  clearToast: () => void
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -54,6 +58,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   menuPage: 0,
   isTransitioning: false,
   screenEffect: 'none',
+  toast: null,
 
   // --- Actions ---
 
@@ -134,8 +139,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   startGame: () => {
-    const { currentCartridge } = get()
+    const { currentCartridge, selectedGameIndex } = get()
     if (!currentCartridge) return
+
+    // 检查选中的游戏是否关联了 ROM 文件
+    const game = currentCartridge.games[selectedGameIndex]
+    if (!game?.romPath) {
+      // 没有 ROM，显示提示
+      set({ toast: '此游戏未关联 ROM 文件，请先通过卡带编辑器添加' })
+      setTimeout(() => set({ toast: null }), 3000)
+      return
+    }
+
     set({ isTransitioning: true, screenEffect: 'flicker' })
     setTimeout(() => {
       set({
@@ -157,5 +172,9 @@ export const useAppStore = create<AppState>((set, get) => ({
         isTransitioning: false,
       })
     }, 400)
+  },
+
+  clearToast: () => {
+    set({ toast: null })
   },
 }))
