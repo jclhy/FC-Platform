@@ -79,6 +79,7 @@ export const IPC_CHANNELS = {
   SELECT_ROM: 'rom:select',
   SCAN_ROM: 'rom:scan',
   GET_ROM_INFO: 'rom:info',
+  READ_ROM_BYTES: 'rom:read-bytes',
   // 卡带管理
   LOAD_CARTRIDGES: 'cartridge:load',
   SAVE_CARTRIDGES: 'cartridge:save',

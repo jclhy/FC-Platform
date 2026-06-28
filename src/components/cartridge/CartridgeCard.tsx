@@ -12,6 +12,7 @@ interface CartridgeCardProps {
   isSelected: boolean
   onSelect: () => void
   onInsert: () => void
+  onEdit: () => void
   onDragStart: (e: React.DragEvent) => void
 }
 
@@ -20,6 +21,7 @@ const CartridgeCard: React.FC<CartridgeCardProps> = ({
   isSelected,
   onSelect,
   onInsert,
+  onEdit,
   onDragStart,
 }) => {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null)
@@ -333,8 +335,7 @@ const CartridgeCard: React.FC<CartridgeCardProps> = ({
             label="编辑卡带"
             onClick={() => {
               setContextMenu(null)
-              // Stub: open editor in future
-              console.log('[CartridgeCard] edit', cartridge.id)
+              onEdit()
             }}
           />
           <div style={{ height: 1, background: '#333', margin: '4px 8px' }} />

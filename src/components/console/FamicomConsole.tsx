@@ -223,31 +223,31 @@ const FamicomConsole: React.FC = () => {
           {/* Top surface */}
           <div style={{
             position: 'relative',
-            height: 48,
+            height: 68,
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-end',
             justifyContent: 'center',
-            padding: '0 24px',
+            padding: '0 24px 6px',
           }}>
             {/* Cartridge slot (recessed) */}
             <div
               className="famicom-cartridge-slot relative"
               style={{
-                width: '55%',
-                height: 28,
+                width: '58%',
+                height: 32,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 zIndex: 2,
               }}
             >
-              {/* Slot inner lines (connector pins visual) */}
+              {/* Slot inner shadow / connector pins */}
               <div style={{
-                width: '80%',
-                height: 4,
-                background: 'linear-gradient(90deg, transparent, #444 10%, #444 90%, transparent)',
-                borderRadius: 1,
-                opacity: 0.6,
+                width: '85%',
+                height: 6,
+                background: 'linear-gradient(180deg, #1a1a1a, #333 40%, #444 60%, #333)',
+                borderRadius: 2,
+                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6)',
               }} />
 
               {/* Cartridge sticking out */}
@@ -256,43 +256,81 @@ const FamicomConsole: React.FC = () => {
                   className={ejectPressed ? '' : 'animate-cartridge-insert'}
                   style={{
                     position: 'absolute',
-                    bottom: '60%',
+                    bottom: '55%',
                     left: '50%',
-                    transform: `translateX(-50%) ${ejectPressed ? 'translateY(-80%)' : ''}`,
-                    width: '70%',
-                    height: 36,
-                    background: currentCartridge.color || '#C8A020',
-                    borderRadius: '4px 4px 0 0',
+                    transform: `translateX(-50%) ${ejectPressed ? 'translateY(-100%)' : ''}`,
+                    width: '75%',
+                    height: 56,
+                    background: `linear-gradient(180deg, ${currentCartridge.color || '#C8A020'} 0%, ${currentCartridge.color || '#C8A020'} 90%, rgba(0,0,0,0.15) 100%)`,
+                    borderRadius: '5px 5px 0 0',
                     boxShadow: `
-                      inset 0 2px 0 rgba(255,255,255,0.2),
-                      0 -2px 6px rgba(0,0,0,0.3)
+                      inset 0 2px 0 rgba(255,255,255,0.25),
+                      inset 0 -2px 4px rgba(0,0,0,0.1),
+                      0 -3px 8px rgba(0,0,0,0.35)
                     `,
                     transition: ejectPressed ? 'transform 0.35s ease-in' : 'none',
                     display: 'flex',
+                    flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
                     zIndex: 3,
+                    padding: '4px 6px',
                   }}
                 >
-                  {/* Cartridge label */}
+                  {/* Top grip notch */}
                   <div style={{
-                    width: '75%',
-                    height: '65%',
-                    background: currentCartridge.labelColor || '#FFF',
+                    position: 'absolute',
+                    top: 0,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: 30,
+                    height: 4,
+                    background: 'rgba(0,0,0,0.12)',
+                    borderRadius: '0 0 3px 3px',
+                  }} />
+
+                  {/* Cartridge label sticker */}
+                  <div style={{
+                    width: '82%',
+                    height: '72%',
+                    background: currentCartridge.labelColor || '#FFFFF0',
                     borderRadius: 2,
                     display: 'flex',
+                    flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: 10,
-                    fontFamily: "'Press Start 2P', monospace",
-                    color: '#222',
-                    letterSpacing: 0.5,
-                    textAlign: 'center',
-                    lineHeight: 1.4,
-                    padding: '0 2px',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
+                    padding: '2px 4px',
                     overflow: 'hidden',
                   }}>
-                    {currentCartridge.name}
+                    {/* Multicart badge */}
+                    {currentCartridge.type === 'multicart' && (
+                      <div style={{
+                        fontFamily: "'Press Start 2P', monospace",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: '#CC2200',
+                        lineHeight: 1,
+                        marginBottom: 2,
+                      }}>
+                        {currentCartridge.games.length} IN 1
+                      </div>
+                    )}
+                    {/* Cartridge name */}
+                    <div style={{
+                      fontFamily: "'Press Start 2P', 'Zpix', monospace",
+                      fontSize: currentCartridge.type === 'multicart' ? 10 : 12,
+                      color: '#222',
+                      textAlign: 'center',
+                      lineHeight: 1.4,
+                      letterSpacing: 0.5,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      maxWidth: '100%',
+                    }}>
+                      {currentCartridge.name}
+                    </div>
                   </div>
                 </div>
               )}
@@ -302,11 +340,11 @@ const FamicomConsole: React.FC = () => {
             {dragOver && !currentCartridge && (
               <div style={{
                 position: 'absolute',
-                top: 6,
+                bottom: 10,
                 left: '50%',
                 transform: 'translateX(-50%)',
-                width: '56%',
-                height: 36,
+                width: '59%',
+                height: 56,
                 border: '2px dashed #FFD700',
                 borderRadius: 6,
                 background: 'rgba(255,215,0,0.1)',
@@ -316,7 +354,7 @@ const FamicomConsole: React.FC = () => {
                 justifyContent: 'center',
               }}>
                 <span style={{
-                  fontSize: 11,
+                  fontSize: 12,
                   color: '#FFD700',
                   fontFamily: "'Press Start 2P', monospace",
                 }}>DROP HERE</span>

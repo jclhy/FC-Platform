@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
+import { readFile } from 'fs/promises'
 import Store from 'electron-store'
 import { IPC_CHANNELS } from '../shared/types'
 import type { Cartridge, AppSettings } from '../shared/types'
@@ -143,6 +144,18 @@ function setupIPC(): void {
   // 获取应用路径
   ipcMain.handle(IPC_CHANNELS.GET_APP_PATH, () => {
     return app.getPath('userData')
+  })
+
+  // 读取 ROM 文件字节（用于 iNES 头解析）
+  ipcMain.handle(IPC_CHANNELS.READ_ROM_BYTES, async (_event, filePath: string) => {
+    try {
+      const buffer = await readFile(filePath)
+      // 只返回前 16 字节（iNES header）就足够解析
+      return new Uint8Array(buffer.slice(0, 16))
+    } catch (err) {
+      console.error('[main] READ_ROM_BYTES failed:', err)
+      return null
+    }
   })
 }
 

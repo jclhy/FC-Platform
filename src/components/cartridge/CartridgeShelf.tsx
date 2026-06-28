@@ -1,8 +1,9 @@
-import React, { useCallback, useMemo, useRef, useEffect } from 'react'
+import React, { useCallback, useMemo, useRef, useEffect, useState } from 'react'
 import { useCartridgeStore } from '@/store/use-cartridge-store'
 import { useAppStore } from '@/store/use-app-store'
 import type { Cartridge } from '@shared/types'
 import CartridgeCard from './CartridgeCard'
+import CartridgeEditor from './CartridgeEditor'
 
 // ============================================================
 //  CartridgeShelf -- right-side panel (~40% width)
@@ -36,6 +37,10 @@ const CartridgeShelf: React.FC = () => {
   const exportCartridgePack = useCartridgeStore((s) => s.exportCartridgePack)
 
   const insertCartridge = useAppStore((s) => s.insertCartridge)
+
+  // --- editor state ---
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [editingCartridge, setEditingCartridge] = useState<Cartridge | null>(null)
 
   // --- local refs ---
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -72,6 +77,14 @@ const CartridgeShelf: React.FC = () => {
     [insertCartridge],
   )
 
+  const handleEdit = useCallback(
+    (cart: Cartridge) => {
+      setEditingCartridge(cart)
+      setEditorOpen(true)
+    },
+    [],
+  )
+
   const handleDragStart = useCallback(
     (_e: React.DragEvent, _cart: Cartridge) => {
       // Data is already set in CartridgeCard's own handler
@@ -80,16 +93,11 @@ const CartridgeShelf: React.FC = () => {
     [],
   )
 
-  const handleAddCartridge = useCallback(async () => {
-    // Try the Electron IPC import flow first
-    const api = (window as any).electronAPI
-    if (api?.importCartridgePack) {
-      await importCartridgePack()
-      return
-    }
-    // Fallback: log intent (UI dialog to be built later)
-    console.log('[CartridgeShelf] add cartridge — dialog not yet implemented')
-  }, [importCartridgePack])
+  const handleAddCartridge = useCallback(() => {
+    // 打开卡带编辑器，从 ROM 文件创建新卡带
+    setEditingCartridge(null)
+    setEditorOpen(true)
+  }, [])
 
   const handleImportAll = useCallback(async () => {
     await importCartridgePack()
@@ -247,6 +255,7 @@ const CartridgeShelf: React.FC = () => {
                 isSelected={selectedCartridgeId === cart.id}
                 onSelect={() => handleSelect(cart)}
                 onInsert={() => handleInsert(cart)}
+                onEdit={() => handleEdit(cart)}
                 onDragStart={(e) => handleDragStart(e, cart)}
               />
             ))}
@@ -339,8 +348,26 @@ const CartridgeShelf: React.FC = () => {
             : `${filteredCartridges.length} / ${totalCount}`}
         </span>
 
-        {/* Import / Export buttons */}
+        {/* Import / Export / Create buttons */}
         <div className="flex gap-2">
+          <button
+            onClick={handleAddCartridge}
+            className="shelf-footer-btn"
+            title="从 ROM 文件创建新卡带"
+            style={{
+              fontFamily: "'Press Start 2P', monospace",
+              fontSize: 10,
+              color: '#FFAA00',
+              background: 'rgba(255,170,0,0.08)',
+              border: '1px solid rgba(255,170,0,0.25)',
+              borderRadius: 3,
+              padding: '4px 8px',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            创建
+          </button>
           <button
             onClick={handleImportAll}
             className="shelf-footer-btn"
@@ -379,6 +406,15 @@ const CartridgeShelf: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* ========================================================
+          CARTRIDGE EDITOR MODAL
+          ======================================================== */}
+      <CartridgeEditor
+        open={editorOpen}
+        onClose={() => setEditorOpen(false)}
+        editCartridge={editingCartridge}
+      />
 
       {/* ========================================================
           SCOPED STYLES
