@@ -117,6 +117,9 @@ export class KeyboardHandler {
       const action = keyToAction(code, this.bindings);
       if (!action) continue;
 
+      // Key is physically held — always mark as held.
+      this.heldActions.add(action);
+
       let hold = this.holdStates.get(code);
       if (!hold) {
         // Key was pressed this frame — mark as fresh press.
@@ -131,34 +134,27 @@ export class KeyboardHandler {
       const elapsed = timestamp - hold.pressedAt;
       const sinceRepeat = timestamp - hold.lastRepeatAt;
 
+      // justPressedActions: only on the initial press frame or repeat pulses.
       if (!hold.initialFired) {
-        // Still in the initial delay window — emit the very first press.
         if (elapsed < REPEAT_INITIAL_DELAY_MS) {
-          // First frame of press — always emit.
+          // First frame of press — emit justPressed.
           if (elapsed < 16) {
-            // Roughly one frame at 60fps — treat as the initial press frame.
-            this.heldActions.add(action);
             this.justPressedActions.add(action);
           }
-          // Otherwise we are waiting for the initial delay; do not emit.
+          // Otherwise waiting for the initial delay — held but no repeat.
         } else {
           // Initial delay has elapsed — fire the first repeat.
           hold.initialFired = true;
           hold.lastRepeatAt = timestamp;
-          this.heldActions.add(action);
           this.justPressedActions.add(action);
         }
       } else {
         // Past initial delay — use the fast repeat interval.
         if (sinceRepeat >= REPEAT_INTERVAL_MS) {
           hold.lastRepeatAt = timestamp;
-          this.heldActions.add(action);
           this.justPressedActions.add(action);
-        } else {
-          // Between repeats — the action is still "held" (for isPressed),
-          // but does NOT re-trigger justPressed.
-          this.heldActions.add(action);
         }
+        // Between repeats — held but no justPressed pulse.
       }
     }
 

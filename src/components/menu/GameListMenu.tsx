@@ -212,50 +212,37 @@ const GameListMenu: React.FC = () => {
     ejectCartridge()
   }, [ejectCartridge, playSound])
 
-  // ---- Unified input loop (keyboard + gamepad) ----
+  // ---- Unified input via inputManager events (no separate rAF loop) ----
+  //
+  // App.tsx already calls inputManager.update() every frame. onAction callbacks
+  // fire synchronously during update() when a just-pressed action is detected,
+  // so there is zero risk of the dual-rAF-loop race condition.
   useEffect(() => {
-    let rafId: number
-    let running = true
+    let audioResumed = false
 
-    const loop = () => {
-      if (!running) return
-
-      // inputManager.update() is already called in App.tsx's rAF loop,
-      // but we also call it here as a safety net for when the component
-      // mounts before App's loop starts.
-      // We only need to poll the already-updated state.
-
-      nesSynth.resume()
-
-      // Check each action via inputManager (covers both keyboard & gamepad)
-      if (inputManager.isActionJustPressed('up')) {
-        moveUp()
-      } else if (inputManager.isActionJustPressed('down')) {
-        moveDown()
-      } else if (inputManager.isActionJustPressed('left')) {
-        goPrevPage()
-      } else if (inputManager.isActionJustPressed('right')) {
-        goNextPage()
-      } else if (
-        inputManager.isActionJustPressed('a') ||
-        inputManager.isActionJustPressed('start')
-      ) {
-        confirm()
-      } else if (
-        inputManager.isActionJustPressed('b') ||
-        inputManager.isActionJustPressed('select')
-      ) {
-        goBack()
+    const handleAction = (event: { action: string }) => {
+      // Resume AudioContext on first user interaction (browser policy)
+      if (!audioResumed) {
+        nesSynth.resume()
+        audioResumed = true
       }
 
-      rafId = requestAnimationFrame(loop)
+      switch (event.action) {
+        case 'up':     moveUp(); break
+        case 'down':   moveDown(); break
+        case 'left':   goPrevPage(); break
+        case 'right':  goNextPage(); break
+        case 'a':
+        case 'start':  confirm(); break
+        case 'b':
+        case 'select': goBack(); break
+      }
     }
 
-    rafId = requestAnimationFrame(loop)
+    inputManager.onAction(handleAction as any)
 
     return () => {
-      running = false
-      cancelAnimationFrame(rafId)
+      inputManager.offAction(handleAction as any)
     }
   }, [moveUp, moveDown, goNextPage, goPrevPage, confirm, goBack])
 

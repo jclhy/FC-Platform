@@ -175,6 +175,9 @@ export class GamepadHandler {
       let hold = this.holdStates.get(action);
 
       if (isRawActive) {
+        // Action is physically held — always mark as held.
+        this.heldActions.add(action);
+
         if (!hold) {
           // Fresh press this frame.
           hold = {
@@ -188,28 +191,21 @@ export class GamepadHandler {
         const elapsed = timestamp - hold.pressedAt;
         const sinceRepeat = timestamp - hold.lastRepeatAt;
 
+        // justPressedActions: only on the initial press frame or repeat pulses.
         if (!hold.initialFired) {
           if (elapsed < REPEAT_INITIAL_DELAY_MS) {
-            // Within initial delay — only emit on the very first frame.
             if (elapsed < 16) {
-              this.heldActions.add(action);
               this.justPressedActions.add(action);
             }
           } else {
-            // Initial delay elapsed — fire first repeat.
             hold.initialFired = true;
             hold.lastRepeatAt = timestamp;
-            this.heldActions.add(action);
             this.justPressedActions.add(action);
           }
         } else {
           if (sinceRepeat >= REPEAT_INTERVAL_MS) {
             hold.lastRepeatAt = timestamp;
-            this.heldActions.add(action);
             this.justPressedActions.add(action);
-          } else {
-            // Between repeat pulses — still held, but no just-pressed.
-            this.heldActions.add(action);
           }
         }
       } else {
