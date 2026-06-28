@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { Cartridge, CartridgeType } from '@shared/types'
+import defaultCartridges from '../../data/default-cartridges.json'
 
 // ============================================================
 // 卡带集合 Store
@@ -51,15 +52,20 @@ export const useCartridgeStore = create<CartridgeState>((set, get) => ({
   // --- Actions ---
 
   loadCartridges: async () => {
+    const defaults = defaultCartridges as unknown as Cartridge[]
     try {
       const api = (window as any).electronAPI
       const data: Cartridge[] | undefined = await api?.loadCartridges()
-      if (data && Array.isArray(data)) {
+      if (data && Array.isArray(data) && data.length > 0) {
         set({ cartridges: data })
+      } else {
+        // IPC 返回空或无数据时使用预置卡带
+        set({ cartridges: defaults })
       }
     } catch (err) {
       console.warn('[cartridge-store] loadCartridges failed, using defaults:', err)
-      // IPC 不可用时保持空数组（dev/preview 模式）
+      // IPC 不可用时使用预置卡带（dev/preview 模式）
+      set({ cartridges: defaults })
     }
   },
 

@@ -4,13 +4,14 @@ import Store from 'electron-store'
 import { IPC_CHANNELS } from '../shared/types'
 import type { Cartridge, AppSettings } from '../shared/types'
 import { is } from '@electron-toolkit/utils'
+import defaultCartridges from '../data/default-cartridges.json'
 
 // ============================================================
 // 持久化存储
 // ============================================================
 const store = new Store({
   defaults: {
-    cartridges: [] as Cartridge[],
+    cartridges: defaultCartridges as Cartridge[],
     settings: {
       audio: { masterVolume: 0.8, sfxVolume: 0.6, sfxEnabled: true },
       video: { scale: 2, scanlines: false, crtFilter: false },
