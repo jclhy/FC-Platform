@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import FamicomConsole from './components/console/FamicomConsole'
 import CartridgeShelf from './components/cartridge/CartridgeShelf'
+import KeyBindingsSettings from './components/settings/KeyBindingsSettings'
 import { useAppStore } from './store/use-app-store'
 import { useCartridgeStore } from './store/use-cartridge-store'
 import { useSettingsStore } from './store/use-settings-store'
@@ -93,7 +94,7 @@ export default function App() {
         <FamicomConsole />
       </div>
 
-      {/* 右侧：卡带架（游戏运行时隐藏） */}
+      {/* 右侧：卡带架 / 设置面板（游戏运行时隐藏） */}
       {view !== 'game' && (
         <div
           className={`h-full transition-all duration-500 ${
@@ -101,7 +102,7 @@ export default function App() {
           }`}
           style={{ width: '40%' }}
         >
-          <CartridgeShelf />
+          {view === 'settings' ? <KeyBindingsSettings /> : <CartridgeShelf />}
         </div>
       )}
 

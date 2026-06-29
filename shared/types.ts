@@ -48,6 +48,11 @@ export interface GamepadConfig {
   [action: string]: number   // 动作 → 手柄按键索引
 }
 
+/** 连发配置：动作 → 是否启用连发 */
+export interface TurboConfig {
+  [action: string]: boolean
+}
+
 /** 应用设置 */
 export interface AppSettings {
   audio: {
@@ -65,6 +70,8 @@ export interface AppSettings {
     player2Keys: KeyBindings
     gamepadConfig: GamepadConfig
     gamepadDeadzone: number
+    turbo: TurboConfig
+    turboRate: number             // 连发频率（帧数/次，3=每3帧toggle一次 ≈ 20Hz@60fps）
   }
   general: {
     language: 'zh-CN' | 'en'

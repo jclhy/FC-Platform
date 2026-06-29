@@ -113,6 +113,20 @@ const GameScreen: React.FC = () => {
   // 上帧按键状态（用于边沿检测）
   const prevButtonsRef = useRef<Record<string, boolean>>({})
 
+  // 连发状态跟踪
+  interface TurboState {
+    active: boolean    // 当前 NES 按钮状态（down/up）
+    frameCount: number // 帧计数器
+    wasHeld: boolean   // 上一帧是否按住
+  }
+  const turboStatesRef = useRef<Record<string, TurboState>>({})
+  const turboRef = useRef<Record<string, boolean>>({})
+  const turboRateRef = useRef(3)
+
+  // 同步连发配置到 ref（使游戏循环可读取最新值）
+  turboRef.current = turbo
+  turboRateRef.current = turboRate
+
   // Canvas 像素缓冲区
   const bufRef = useRef<ArrayBuffer | null>(null)
   const buf8Ref = useRef<Uint8ClampedArray | null>(null)
@@ -126,6 +140,8 @@ const GameScreen: React.FC = () => {
   const selectedGameIndex = useAppStore((s) => s.selectedGameIndex)
   const resetConsole = useAppStore((s) => s.resetConsole)
   const masterVolume = useSettingsStore((s) => s.audio.masterVolume)
+  const turbo = useSettingsStore((s) => s.input.turbo)
+  const turboRate = useSettingsStore((s) => s.input.turboRate)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -283,20 +299,50 @@ const GameScreen: React.FC = () => {
           while (accumulator >= FRAME_INTERVAL) {
             accumulator -= FRAME_INTERVAL
 
-            // 轮询输入
+            // 轮询输入（支持连发模式）
             const actions = Object.keys(ACTION_TO_BUTTON)
             for (const action of actions) {
               const btn = ACTION_TO_BUTTON[action]
               const pressed = inputManager.isAction(action as any, 1)
-              const wasPressed = prevButtonsRef.current[action] || false
 
-              if (pressed && !wasPressed) {
-                nes.buttonDown(1, btn as any)
-              } else if (!pressed && wasPressed) {
-                nes.buttonUp(1, btn as any)
+              if (turboRef.current[action]) {
+                // --- 连发模式：按住时快速 toggle ---
+                if (!turboStatesRef.current[action]) {
+                  turboStatesRef.current[action] = { active: false, frameCount: 0, wasHeld: false }
+                }
+                const ts = turboStatesRef.current[action]
+
+                if (pressed) {
+                  ts.frameCount++
+                  if (ts.frameCount >= turboRateRef.current) {
+                    ts.frameCount = 0
+                    ts.active = !ts.active
+                    if (ts.active) {
+                      nes.buttonDown(1, btn as any)
+                    } else {
+                      nes.buttonUp(1, btn as any)
+                    }
+                  }
+                  ts.wasHeld = true
+                } else {
+                  // 松开连发键：释放 NES 按钮，重置状态
+                  if (ts.wasHeld) {
+                    nes.buttonUp(1, btn as any)
+                    ts.active = false
+                    ts.frameCount = 0
+                    ts.wasHeld = false
+                  }
+                }
+              } else {
+                // --- 普通模式：原有边沿检测逻辑 ---
+                const wasPressed = prevButtonsRef.current[action] || false
+                if (pressed && !wasPressed) {
+                  nes.buttonDown(1, btn as any)
+                } else if (!pressed && wasPressed) {
+                  nes.buttonUp(1, btn as any)
+                }
+                prevButtonsRef.current[action] = pressed
               }
-
-              prevButtonsRef.current[action] = pressed
             }
 
             // 运行一帧

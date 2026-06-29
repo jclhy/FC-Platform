@@ -29,6 +29,21 @@ const DEFAULT_P2_KEYS: KeyBindings = {
   select: ['Digit2'],
 }
 
+/** 默认连发配置（所有动作关闭） */
+const DEFAULT_TURBO: Record<string, boolean> = {
+  up: false,
+  down: false,
+  left: false,
+  right: false,
+  a: false,
+  b: false,
+  start: false,
+  select: false,
+}
+
+/** 默认连发频率（每 3 帧 toggle 一次 ≈ 20Hz@60fps） */
+const DEFAULT_TURBO_RATE = 3
+
 /** 默认手柄配置 */
 const DEFAULT_GAMEPAD: GamepadConfig = {
   up: 12,
@@ -58,6 +73,8 @@ const DEFAULT_SETTINGS: AppSettings = {
     player2Keys: DEFAULT_P2_KEYS,
     gamepadConfig: DEFAULT_GAMEPAD,
     gamepadDeadzone: 0.25,
+    turbo: DEFAULT_TURBO,
+    turboRate: DEFAULT_TURBO_RATE,
   },
   general: {
     language: 'zh-CN',
@@ -83,6 +100,10 @@ interface SettingsState extends AppSettings {
   updateInput: (partial: Partial<AppSettings['input']>) => void
   /** 更新通用设置 */
   updateGeneral: (partial: Partial<AppSettings['general']>) => void
+  /** 切换某个动作的连发开关 */
+  toggleTurbo: (action: string) => void
+  /** 设置连发频率 */
+  setTurboRate: (rate: number) => void
   /** 重置所有设置为默认值 */
   resetToDefaults: () => void
 }
@@ -148,6 +169,29 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     set((state) => ({
       general: { ...state.general, ...partial },
     }))
+  },
+
+  toggleTurbo: (action) => {
+    set((state) => ({
+      input: {
+        ...state.input,
+        turbo: {
+          ...state.input.turbo,
+          [action]: !state.input.turbo[action],
+        },
+      },
+    }))
+    get().saveSettings()
+  },
+
+  setTurboRate: (rate) => {
+    set((state) => ({
+      input: {
+        ...state.input,
+        turboRate: Math.max(1, Math.min(10, rate)),
+      },
+    }))
+    get().saveSettings()
   },
 
   resetToDefaults: () => {

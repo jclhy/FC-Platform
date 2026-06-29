@@ -37,6 +37,7 @@ const CartridgeShelf: React.FC = () => {
   const exportCartridgePack = useCartridgeStore((s) => s.exportCartridgePack)
 
   const insertCartridge = useAppStore((s) => s.insertCartridge)
+  const setView = useAppStore((s) => s.setView)
 
   // --- editor state ---
   const [editorOpen, setEditorOpen] = useState(false)
@@ -133,29 +134,52 @@ const CartridgeShelf: React.FC = () => {
             卡带收藏
           </h2>
 
-          {/* Add button */}
-          <button
-            onClick={handleAddCartridge}
-            className="shelf-add-btn flex items-center justify-center"
-            title="创建 / 导入卡带"
-            style={{
-              width: 30,
-              height: 30,
-              background: 'linear-gradient(180deg, #FFD700, #DAA520)',
-              border: 'none',
-              borderRadius: 4,
-              color: '#1a1a2e',
-              fontSize: 22,
-              fontWeight: 700,
-              fontFamily: 'Arial, sans-serif',
-              cursor: 'pointer',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3)',
-              transition: 'transform 0.1s ease, box-shadow 0.1s ease',
-              lineHeight: 1,
-            }}
-          >
-            +
-          </button>
+          {/* Settings button */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setView('settings')}
+              title="键位设置"
+              style={{
+                width: 30,
+                height: 30,
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: 4,
+                color: '#AAA',
+                fontSize: 16,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'background 0.2s',
+              }}
+            >
+              ⚙
+            </button>
+            {/* Add button */}
+            <button
+              onClick={handleAddCartridge}
+              className="shelf-add-btn flex items-center justify-center"
+              title="创建 / 导入卡带"
+              style={{
+                width: 30,
+                height: 30,
+                background: 'linear-gradient(180deg, #FFD700, #DAA520)',
+                border: 'none',
+                borderRadius: 4,
+                color: '#1a1a2e',
+                fontSize: 22,
+                fontWeight: 700,
+                fontFamily: 'Arial, sans-serif',
+                cursor: 'pointer',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3)',
+                transition: 'transform 0.1s ease, box-shadow 0.1s ease',
+                lineHeight: 1,
+              }}
+            >
+              +
+            </button>
+          </div>
         </div>
 
         {/* Filter tabs */}
