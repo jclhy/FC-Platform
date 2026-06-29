@@ -83,20 +83,29 @@ const FamicomConsole: React.FC = () => {
     screenEffect === 'off' ? 'animate-screen-off' : ''
 
   return (
-    <div className="famicom-wrapper flex flex-col items-center justify-end h-full w-full px-4 pb-8 pt-4 relative">
+    <div
+      className="famicom-wrapper flex flex-col items-center justify-end w-full relative"
+      style={{
+        height: view === 'game' ? '100%' : '100%',
+        padding: view === 'game' ? 0 : '0 16px 32px 16px',
+      }}
+    >
 
       {/* ========================================================
           TV SCREEN AREA
           ======================================================== */}
-      <div className="tv-bezel relative mb-6 flex-shrink-0"
+      <div
+        className="tv-bezel relative flex-shrink-0"
         style={{
           width: '100%',
-          maxWidth: 520,
-          aspectRatio: '4 / 3',
-          background: 'linear-gradient(145deg, #2a2a2a, #1a1a1a)',
-          borderRadius: 16,
-          padding: 14,
-          boxShadow: `
+          maxWidth: view === 'game' ? 'none' : 520,
+          aspectRatio: view === 'game' ? 'auto' : '4 / 3',
+          flex: view === 'game' ? 1 : 'none',
+          marginBottom: view === 'game' ? 0 : 24,
+          background: view === 'game' ? 'transparent' : 'linear-gradient(145deg, #2a2a2a, #1a1a1a)',
+          borderRadius: view === 'game' ? 0 : 16,
+          padding: view === 'game' ? 0 : 14,
+          boxShadow: view === 'game' ? 'none' : `
             0 8px 32px rgba(0,0,0,0.6),
             inset 0 2px 0 rgba(255,255,255,0.05),
             inset 0 -2px 0 rgba(0,0,0,0.4)
@@ -104,14 +113,16 @@ const FamicomConsole: React.FC = () => {
         }}
       >
         {/* Inner bezel ring */}
-        <div style={{
-          position: 'absolute',
-          inset: 8,
-          borderRadius: 12,
-          border: '2px solid #333',
-          pointerEvents: 'none',
-          zIndex: 2,
-        }} />
+        {view !== 'game' && (
+          <div style={{
+            position: 'absolute',
+            inset: 8,
+            borderRadius: 12,
+            border: '2px solid #333',
+            pointerEvents: 'none',
+            zIndex: 2,
+          }} />
+        )}
 
         {/* Screen glass */}
         <div
@@ -204,33 +215,37 @@ const FamicomConsole: React.FC = () => {
           )}
 
           {/* Screen reflection glare */}
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '40%',
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)',
-            borderRadius: '10px 10px 0 0',
-            pointerEvents: 'none',
-            zIndex: 25,
-          }} />
+          {view !== 'game' && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '40%',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)',
+              borderRadius: '10px 10px 0 0',
+              pointerEvents: 'none',
+              zIndex: 25,
+            }} />
+          )}
         </div>
 
         {/* TV brand label */}
-        <div style={{
-          position: 'absolute',
-          bottom: 2,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          fontSize: 11,
-          color: '#444',
-          fontFamily: 'Arial, sans-serif',
-          letterSpacing: 3,
-          textTransform: 'uppercase',
-        }}>
-          FAMILY COMPUTER
-        </div>
+        {view !== 'game' && (
+          <div style={{
+            position: 'absolute',
+            bottom: 2,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            fontSize: 11,
+            color: '#444',
+            fontFamily: 'Arial, sans-serif',
+            letterSpacing: 3,
+            textTransform: 'uppercase',
+          }}>
+            FAMILY COMPUTER
+          </div>
+        )}
       </div>
 
       {/* ========================================================
@@ -238,7 +253,11 @@ const FamicomConsole: React.FC = () => {
           ======================================================== */}
       <div
         className="famicom-console relative flex-shrink-0"
-        style={{ width: '100%', maxWidth: 520 }}
+        style={{
+          display: view === 'game' ? 'none' : 'block',
+          width: '100%',
+          maxWidth: 520,
+        }}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
