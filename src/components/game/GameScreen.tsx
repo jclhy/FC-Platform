@@ -263,31 +263,48 @@ const GameScreen: React.FC = () => {
       }
 
       // ROM 加载成功，启动游戏主循环
-      const gameLoop = () => {
+      // 限频 60fps 以保证音频采样率正确，不受显示器刷新率影响
+      const FRAME_INTERVAL = 1000 / 60
+      const lastFrameTimeRef = { current: 0 }
+
+      const gameLoop = (timestamp: number) => {
         if (destroyed) return
 
         if (!pausedRef.current) {
-          // 轮询输入
-          const actions = Object.keys(ACTION_TO_BUTTON)
-          for (const action of actions) {
-            const btn = ACTION_TO_BUTTON[action]
-            const pressed = inputManager.isAction(action as any, 1)
-            const wasPressed = prevButtonsRef.current[action] || false
+          // 用 delta time 累积器将 rAF 节流到 60fps
+          if (lastFrameTimeRef.current === 0) {
+            lastFrameTimeRef.current = timestamp
+          }
+          const delta = timestamp - lastFrameTimeRef.current
+          lastFrameTimeRef.current = timestamp
 
-            if (pressed && !wasPressed) {
-              nes.buttonDown(1, btn as any)
-            } else if (!pressed && wasPressed) {
-              nes.buttonUp(1, btn as any)
+          // 累积时间，按固定间隔执行帧
+          let accumulator = delta
+          while (accumulator >= FRAME_INTERVAL) {
+            accumulator -= FRAME_INTERVAL
+
+            // 轮询输入
+            const actions = Object.keys(ACTION_TO_BUTTON)
+            for (const action of actions) {
+              const btn = ACTION_TO_BUTTON[action]
+              const pressed = inputManager.isAction(action as any, 1)
+              const wasPressed = prevButtonsRef.current[action] || false
+
+              if (pressed && !wasPressed) {
+                nes.buttonDown(1, btn as any)
+              } else if (!pressed && wasPressed) {
+                nes.buttonUp(1, btn as any)
+              }
+
+              prevButtonsRef.current[action] = pressed
             }
 
-            prevButtonsRef.current[action] = pressed
-          }
-
-          // 运行一帧
-          try {
-            nes.frame()
-          } catch (e) {
-            console.error('[GameScreen] NES frame error:', e)
+            // 运行一帧
+            try {
+              nes.frame()
+            } catch (e) {
+              console.error('[GameScreen] NES frame error:', e)
+            }
           }
         }
 

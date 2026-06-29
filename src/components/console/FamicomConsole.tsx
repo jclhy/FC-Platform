@@ -279,14 +279,26 @@ const FamicomConsole: React.FC = () => {
               {/* Cartridge sticking out */}
               {currentCartridge && (
                 <div
-                  className={ejectPressed ? '' : 'animate-cartridge-insert'}
+                  className={
+                    ejectPressed
+                      ? 'animate-cartridge-eject'
+                      : 'animate-cartridge-insert'
+                  }
                   style={{
                     position: 'absolute',
                     bottom: '55%',
                     left: '50%',
-                    transform: `translateX(-50%) ${ejectPressed ? 'translateY(-100%)' : ''}`,
                     width: '75%',
                     height: 56,
+                    zIndex: 3,
+                    padding: '4px 6px',
+                  }}
+                >
+                  {/* Cartridge visual content */}
+                  <div style={{
+                    width: '100%',
+                    height: '100%',
+                    position: 'relative',
                     background: `linear-gradient(180deg, ${currentCartridge.color || '#C8A020'} 0%, ${currentCartridge.color || '#C8A020'} 90%, rgba(0,0,0,0.15) 100%)`,
                     borderRadius: '5px 5px 0 0',
                     boxShadow: `
@@ -294,13 +306,10 @@ const FamicomConsole: React.FC = () => {
                       inset 0 -2px 4px rgba(0,0,0,0.1),
                       0 -3px 8px rgba(0,0,0,0.35)
                     `,
-                    transition: ejectPressed ? 'transform 0.35s ease-in' : 'none',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    zIndex: 3,
-                    padding: '4px 6px',
                   }}
                 >
                   {/* Top grip notch */}
@@ -359,7 +368,8 @@ const FamicomConsole: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
+            )}
             </div>
 
             {/* Drag-over highlight */}
