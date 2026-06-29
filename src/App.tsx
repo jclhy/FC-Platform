@@ -88,8 +88,10 @@ export default function App() {
     <div className="flex h-screen w-screen overflow-hidden bg-[#1a1a2e]">
       {/* 左侧：红白机主机 + 电视屏幕 */}
       <div
-        className="flex flex-col items-center justify-center p-6 transition-all duration-500"
-        style={{ width: view === 'game' ? '100%' : '60%' }}
+        className={`flex flex-col transition-all duration-500 ${
+          view === 'game' ? 'items-stretch p-0' : 'items-center justify-center p-6'
+        }`}
+        style={{ width: view === 'game' ? '100%' : '60%', height: '100%' }}
       >
         <FamicomConsole />
       </div>

@@ -282,22 +282,26 @@ const GameScreen: React.FC = () => {
       // 限频 60fps 以保证音频采样率正确，不受显示器刷新率影响
       const FRAME_INTERVAL = 1000 / 60
       const lastFrameTimeRef = { current: 0 }
+      const accumulatorRef = { current: 0 }
 
       const gameLoop = (timestamp: number) => {
         if (destroyed) return
 
         if (!pausedRef.current) {
           // 用 delta time 累积器将 rAF 节流到 60fps
+          // 注意：accumulator 必须跨帧持久累积，否则高刷新率 (120Hz+) 下
+          // delta < FRAME_INTERVAL 会导致 while 循环永不执行，nes.frame() 不会被调用
           if (lastFrameTimeRef.current === 0) {
             lastFrameTimeRef.current = timestamp
+            accumulatorRef.current = 0
           }
           const delta = timestamp - lastFrameTimeRef.current
           lastFrameTimeRef.current = timestamp
 
           // 累积时间，按固定间隔执行帧
-          let accumulator = delta
-          while (accumulator >= FRAME_INTERVAL) {
-            accumulator -= FRAME_INTERVAL
+          accumulatorRef.current += delta
+          while (accumulatorRef.current >= FRAME_INTERVAL) {
+            accumulatorRef.current -= FRAME_INTERVAL
 
             // 轮询输入（支持连发模式）
             const actions = Object.keys(ACTION_TO_BUTTON)
