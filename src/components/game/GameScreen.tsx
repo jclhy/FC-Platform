@@ -104,6 +104,7 @@ const GameScreen: React.FC = () => {
   const nesRef = useRef<NES | null>(null)
   const rafRef = useRef<number>(0)
   const workletNodeRef = useRef<AudioWorkletNode | null>(null)
+  const gainNodeRef = useRef<GainNode | null>(null)
 
   // 音频采样批缓冲区
   const batchLRef = useRef(new Float32Array(AUDIO_BATCH_SIZE))
@@ -143,6 +144,10 @@ const GameScreen: React.FC = () => {
   turboRef.current = turbo
   turboRateRef.current = turboRate
 
+  // 音量 ref（避免 masterVolume 变化时重建整个 NES 实例）
+  const masterVolumeRef = useRef(masterVolume)
+  masterVolumeRef.current = masterVolume
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -179,6 +184,7 @@ const GameScreen: React.FC = () => {
 
     // --- 音频初始化（异步，不阻塞 ROM 加载） ---
     let gainNode: GainNode | null = null
+    let blobUrl: string | null = null
 
     const initAudio = async () => {
       try {
@@ -188,9 +194,9 @@ const GameScreen: React.FC = () => {
         }
 
         const blob = new Blob([AUDIO_WORKLET_CODE], { type: 'application/javascript' })
-        const url = URL.createObjectURL(blob)
-        await audioCtx.audioWorklet.addModule(url)
-        URL.revokeObjectURL(url)
+        blobUrl = URL.createObjectURL(blob)
+        await audioCtx.audioWorklet.addModule(blobUrl)
+        // 不在这里 revoke — Electron 下 worklet 可能还在解析中，延迟到清理时释放
 
         if (destroyed) return
 
@@ -199,7 +205,8 @@ const GameScreen: React.FC = () => {
         })
 
         gainNode = audioCtx.createGain()
-        gainNode.gain.value = masterVolume * 0.8
+        gainNode.gain.value = masterVolumeRef.current * 0.8
+        gainNodeRef.current = gainNode
 
         node.connect(gainNode)
         gainNode.connect(audioCtx.destination)
@@ -212,6 +219,9 @@ const GameScreen: React.FC = () => {
 
     // 音频在后台初始化，不阻塞画面
     initAudio()
+
+    // 获取 AudioContext 的实际采样率（Windows 通常为 48000）
+    const audioSampleRate = nesSynth.getAudioContext().sampleRate || 48000
 
     // --- JSNES 实例 ---
     const nes = new NES({
@@ -253,7 +263,7 @@ const GameScreen: React.FC = () => {
         }
       },
       emulateSound: true,
-      sampleRate: 44100,
+      sampleRate: audioSampleRate,
     })
 
     nesRef.current = nes
@@ -412,6 +422,7 @@ const GameScreen: React.FC = () => {
       destroyed = true
       cancelAnimationFrame(rafRef.current)
       if (frameLogInterval) clearInterval(frameLogInterval)
+      if (blobUrl) URL.revokeObjectURL(blobUrl)
       window.removeEventListener('keydown', handleKeyDown)
 
       if (nesRef.current) {
@@ -427,10 +438,17 @@ const GameScreen: React.FC = () => {
       if (gainNode) {
         gainNode.disconnect()
       }
-
+      gainNodeRef.current = null
       nesRef.current = null
     }
-  }, [currentCartridge, selectedGameIndex, resetConsole, masterVolume])
+  }, [currentCartridge, selectedGameIndex, resetConsole])
+
+  // 动态更新音量（不重建 NES 实例）
+  useEffect(() => {
+    if (gainNodeRef.current) {
+      gainNodeRef.current.gain.value = masterVolume * 0.8
+    }
+  }, [masterVolume])
 
   // --- 渲染 ---
   return (

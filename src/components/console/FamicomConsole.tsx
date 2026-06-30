@@ -84,7 +84,9 @@ const FamicomConsole: React.FC = () => {
 
   return (
     <div
-      className="famicom-wrapper flex flex-col items-center justify-end w-full relative"
+      className={`famicom-wrapper flex flex-col items-center w-full relative ${
+        view === 'game' ? 'justify-center overflow-hidden' : 'justify-end'
+      }`}
       style={{
         height: view === 'game' ? '100%' : '100%',
         padding: view === 'game' ? 0 : '0 16px 32px 16px',
@@ -95,7 +97,7 @@ const FamicomConsole: React.FC = () => {
           TV SCREEN AREA
           ======================================================== */}
       <div
-        className="tv-bezel relative flex-shrink-0"
+        className={`tv-bezel relative ${view === 'game' ? '' : 'flex-shrink-0'}`}
         style={{
           width: '100%',
           maxWidth: view === 'game' ? 'none' : 520,
@@ -130,7 +132,7 @@ const FamicomConsole: React.FC = () => {
           style={{
             width: '100%',
             height: '100%',
-            borderRadius: 10,
+            borderRadius: view === 'game' ? 0 : 10,
             background: isScreenOn ? '#0000AA' : '#0a0a0a',
             boxShadow: isScreenOn
               ? 'inset 0 0 40px rgba(0,0,170,0.4), 0 0 20px rgba(0,0,170,0.15)'
@@ -143,7 +145,7 @@ const FamicomConsole: React.FC = () => {
             <div style={{
               position: 'absolute',
               inset: 0,
-              borderRadius: 10,
+              borderRadius: view === 'game' ? 0 : 10,
               background: 'radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.35) 100%)',
               pointerEvents: 'none',
               zIndex: 20,
@@ -156,7 +158,7 @@ const FamicomConsole: React.FC = () => {
               position: 'absolute',
               inset: 0,
               zIndex: 15,
-              borderRadius: 10,
+              borderRadius: view === 'game' ? 0 : 10,
             }} />
           )}
 
