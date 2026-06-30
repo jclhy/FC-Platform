@@ -11,7 +11,7 @@ export default defineConfig({
         }
       }
     },
-    plugins: [externalizeDepsPlugin({ exclude: ['adm-zip'] })],
+    plugins: [externalizeDepsPlugin()],
     resolve: {
       alias: {
         '@shared': resolve('shared')
