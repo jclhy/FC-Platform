@@ -123,10 +123,6 @@ const GameScreen: React.FC = () => {
   const turboRef = useRef<Record<string, boolean>>({})
   const turboRateRef = useRef(3)
 
-  // 同步连发配置到 ref（使游戏循环可读取最新值）
-  turboRef.current = turbo
-  turboRateRef.current = turboRate
-
   // Canvas 像素缓冲区
   const bufRef = useRef<ArrayBuffer | null>(null)
   const buf8Ref = useRef<Uint8ClampedArray | null>(null)
@@ -142,6 +138,10 @@ const GameScreen: React.FC = () => {
   const masterVolume = useSettingsStore((s) => s.audio.masterVolume)
   const turbo = useSettingsStore((s) => s.input.turbo)
   const turboRate = useSettingsStore((s) => s.input.turboRate)
+
+  // 同步连发配置到 ref（使游戏循环可读取最新值）
+  turboRef.current = turbo
+  turboRateRef.current = turboRate
 
   useEffect(() => {
     const canvas = canvasRef.current
