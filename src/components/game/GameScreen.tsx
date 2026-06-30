@@ -216,6 +216,11 @@ const GameScreen: React.FC = () => {
     const nes = new NES({
       onFrame: (buffer: Uint32Array) => {
         if (destroyed) return
+        // 诊断：首次画面输出标记
+        if (!(window as any).__firstFrame) {
+          (window as any).__firstFrame = true
+          console.log('[GameScreen] FIRST onFrame fired')
+        }
         // 将 JSNES BGR 格式像素转换为 Canvas ABGR 格式
         const b32 = buf32Ref.current
         if (!b32) return
@@ -265,11 +270,21 @@ const GameScreen: React.FC = () => {
         if (destroyed) return
 
         if (!romData) {
+          console.error(`[GameScreen] loadRomData returned null for: ${game.romPath}`)
           setError(`无法读取 ROM 文件:\n${game.romPath}`)
           return
         }
 
-        nes.loadROM(romData)
+        console.log(`[GameScreen] ROM data loaded: path="${game.romPath}" size=${romData.length} bytes`)
+
+        try {
+          nes.loadROM(romData)
+          console.log('[GameScreen] nes.loadROM OK')
+        } catch (e) {
+          console.error('[GameScreen] nes.loadROM threw:', e)
+          if (!destroyed) setError(`ROM 加载失败:\n${e instanceof Error ? e.message : String(e)}`)
+          return
+        }
         if (destroyed) return
       } catch (e) {
         if (!destroyed) {
@@ -283,6 +298,13 @@ const GameScreen: React.FC = () => {
       const FRAME_INTERVAL = 1000 / 60
       const lastFrameTimeRef = { current: 0 }
       const accumulatorRef = { current: 0 }
+
+      // 诊断：帧计数器
+      let frameCount = 0
+      const frameLogInterval = setInterval(() => {
+        console.log(`[GameScreen] rendered ${frameCount} frames in last 5s`)
+        frameCount = 0
+      }, 5000)
 
       const gameLoop = (timestamp: number) => {
         if (destroyed) return
@@ -352,6 +374,7 @@ const GameScreen: React.FC = () => {
             // 运行一帧
             try {
               nes.frame()
+              frameCount++
             } catch (e) {
               console.error('[GameScreen] NES frame error:', e)
             }
@@ -387,6 +410,7 @@ const GameScreen: React.FC = () => {
     return () => {
       destroyed = true
       cancelAnimationFrame(rafRef.current)
+      clearInterval(frameLogInterval)
       window.removeEventListener('keydown', handleKeyDown)
 
       if (nesRef.current) {
