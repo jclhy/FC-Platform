@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react'
+import React, { useState, useCallback, useRef, useEffect } from 'react'
 import type { Cartridge, CartridgeType, GameEntry } from '@shared/types'
 import { parseINesHeader, getMapperInfo } from '@/utils/rom-parser'
 import { useCartridgeStore } from '@/store/use-cartridge-store'
@@ -72,6 +72,31 @@ const CartridgeEditor: React.FC<CartridgeEditorProps> = ({
   const [error, setError] = useState<string | null>(null)
 
   const overlayRef = useRef<HTMLDivElement>(null)
+
+  // 编辑模式：从现有卡带回填 romEntries
+  useEffect(() => {
+    if (open && editCartridge) {
+      const entries: RomEntry[] = editCartridge.games.map((g, i) => {
+        const fileName = g.romPath?.split(/[\\/]/).pop() || `${g.name}.nes`
+        return {
+          filePath: g.romPath || '',
+          fileName,
+          gameName: g.name,
+          gameNameEn: g.nameEn || '',
+          mapper: g.mapper ?? -1,
+          mapperInfo: g.mapper !== undefined ? `Mapper ${g.mapper}` : '未知',
+          prgSize: 0,
+          chrSize: 0,
+          mirroring: '',
+          valid: g.mapper !== undefined,
+        }
+      })
+      setRomEntries(entries)
+    } else if (!open) {
+      // 关闭编辑器时清空
+      setRomEntries([])
+    }
+  }, [open, editCartridge])
 
   const playClick = useCallback(() => {
     if (sfxEnabled) nesSynth.playCursorDown()

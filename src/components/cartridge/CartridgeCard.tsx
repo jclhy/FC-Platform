@@ -25,6 +25,7 @@ const CartridgeCard: React.FC<CartridgeCardProps> = ({
   onDragStart,
 }) => {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   // Close context menu on outside click
@@ -353,8 +354,7 @@ const CartridgeCard: React.FC<CartridgeCardProps> = ({
             danger
             onClick={() => {
               setContextMenu(null)
-              // Stub: confirm + remove
-              console.log('[CartridgeCard] delete', cartridge.id)
+              setConfirmDelete(true)
             }}
           />
         </div>
@@ -366,6 +366,77 @@ const CartridgeCard: React.FC<CartridgeCardProps> = ({
           opacity: 1 !important;
         }
       `}</style>
+
+      {/* ---- 确认删除对话框 ---- */}
+      {confirmDelete && (
+        <div
+          className="fixed z-50 flex items-center justify-center"
+          style={{
+            top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(2px)',
+          }}
+          onClick={() => setConfirmDelete(false)}
+        >
+          <div
+            style={{
+              background: '#1E1E2E',
+              border: '1px solid rgba(255,80,80,0.3)',
+              borderRadius: 8,
+              padding: '20px 24px',
+              maxWidth: 320,
+              fontFamily: "'Press Start 2P', monospace",
+              textAlign: 'center',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontSize: 13, color: '#FF5555', marginBottom: 12 }}>
+              确认删除
+            </div>
+            <div style={{ fontSize: 11, color: '#AAA', lineHeight: 1.8, marginBottom: 16 }}>
+              确定要删除「{cartridge.name}」吗？
+              <br />
+              此操作不可恢复。
+            </div>
+            <div className="flex justify-center gap-3">
+              <button
+                style={{
+                  padding: '6px 14px',
+                  fontSize: 10,
+                  fontFamily: "'Press Start 2P', monospace",
+                  color: '#888',
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid #444',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                }}
+                onClick={() => setConfirmDelete(false)}
+              >
+                取消
+              </button>
+              <button
+                style={{
+                  padding: '6px 14px',
+                  fontSize: 10,
+                  fontFamily: "'Press Start 2P', monospace",
+                  color: '#FFF',
+                  background: 'rgba(255,80,80,0.25)',
+                  border: '1px solid rgba(255,80,80,0.5)',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                }}
+                onClick={() => {
+                  useCartridgeStore.getState().removeCartridge(cartridge.id)
+                  useCartridgeStore.getState().saveCartridges()
+                  setConfirmDelete(false)
+                }}
+              >
+                删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
