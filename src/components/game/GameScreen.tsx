@@ -148,6 +148,7 @@ const GameScreen: React.FC = () => {
     if (!canvas) return
 
     let destroyed = false
+    let frameLogInterval: ReturnType<typeof setInterval> | null = null
 
     // 获取当前游戏条目
     const game = currentCartridge?.games[selectedGameIndex]
@@ -301,7 +302,7 @@ const GameScreen: React.FC = () => {
 
       // 诊断：帧计数器
       let frameCount = 0
-      const frameLogInterval = setInterval(() => {
+      frameLogInterval = setInterval(() => {
         console.log(`[GameScreen] rendered ${frameCount} frames in last 5s`)
         frameCount = 0
       }, 5000)
@@ -410,7 +411,7 @@ const GameScreen: React.FC = () => {
     return () => {
       destroyed = true
       cancelAnimationFrame(rafRef.current)
-      clearInterval(frameLogInterval)
+      if (frameLogInterval) clearInterval(frameLogInterval)
       window.removeEventListener('keydown', handleKeyDown)
 
       if (nesRef.current) {
