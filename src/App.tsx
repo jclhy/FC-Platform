@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import FamicomConsole from './components/console/FamicomConsole'
 import CartridgeShelf from './components/cartridge/CartridgeShelf'
 import KeyBindingsSettings from './components/settings/KeyBindingsSettings'
+import GameScreen from './components/game/GameScreen'
 import { useAppStore } from './store/use-app-store'
 import { useCartridgeStore } from './store/use-cartridge-store'
 import { useSettingsStore } from './store/use-settings-store'
@@ -86,12 +87,29 @@ export default function App() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#1a1a2e]">
+      {/* 游戏模式：GameScreen 直接全屏覆盖，绕过 FamicomConsole 布局链 */}
+      {view === 'game' && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 50,
+            background: '#000',
+          }}
+        >
+          <GameScreen />
+        </div>
+      )}
+
       {/* 左侧：红白机主机 + 电视屏幕 */}
       <div
         className={`flex flex-col transition-all duration-500 ${
-          view === 'game' ? 'items-stretch p-0' : 'items-center justify-center p-6'
+          view === 'game' ? 'opacity-0 pointer-events-none' : 'items-center justify-center p-6'
         }`}
-        style={{ width: view === 'game' ? '100%' : '60%', height: '100%' }}
+        style={{ width: '60%', height: '100%' }}
       >
         <FamicomConsole />
       </div>
