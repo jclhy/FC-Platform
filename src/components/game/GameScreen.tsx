@@ -232,11 +232,15 @@ const GameScreen: React.FC = () => {
           (window as any).__firstFrame = true
           console.log('[GameScreen] FIRST onFrame fired')
         }
-        // 将 JSNES BGR 格式像素转换为 Canvas ABGR 格式
+        // JSNES 像素格式为 0x00RRGGBB (getRgb = r<<16 | g<<8 | b)
+        // 在小端 x86 上，内存布局为 [BB, GG, RR, 00]
+        // Canvas ImageData 需要 [RR, GG, BB, FF]
+        // 所以交换 R↔B，并设置 Alpha = FF
         const b32 = buf32Ref.current
         if (!b32) return
         for (let i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; i++) {
-          b32[i] = 0xff000000 | buffer[i]
+          const p = buffer[i]
+          b32[i] = 0xff000000 | ((p & 0xff) << 16) | (p & 0xff00) | ((p >> 16) & 0xff)
         }
         imageData.data.set(buf8Ref.current!)
         ctx.putImageData(imageData, 0, 0)
