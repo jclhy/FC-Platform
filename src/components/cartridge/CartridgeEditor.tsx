@@ -98,43 +98,98 @@ const CartridgeEditor: React.FC<CartridgeEditorProps> = ({
       const newEntries: RomEntry[] = []
 
       for (const fp of filePaths) {
-        const fileName = fp.split(/[\\/]/).pop() || fp
-        const gameName = fileName.replace(/\.(nes|fds|unf|unif)$/i, '')
+        const ext = fp.split(/[\\/]/).pop()?.split('.').pop()?.toLowerCase() || ''
 
-        let entry: RomEntry = {
-          filePath: fp,
-          fileName,
-          gameName,
-          gameNameEn: '',
-          mapper: -1,
-          mapperInfo: '未知',
-          prgSize: 0,
-          chrSize: 0,
-          mirroring: '',
-          valid: false,
-        }
+        if (ext === 'zip') {
+          // --- 处理压缩包：提取其中的 ROM 文件 ---
+          const extracted: { name: string; filePath: string }[] | null = await api.extractZip(fp)
+          if (extracted === null) {
+            setError(`ZIP 解压失败，请检查压缩包是否损坏:\n${fp}`)
+            continue
+          }
+          if (extracted.length === 0) {
+            setError(`压缩包中未找到 NES ROM 文件 (支持 .nes .fds .unf .unif .bin):\n${fp}`)
+            continue
+          }
 
-        try {
-          const bytes: Uint8Array | null = await api.readRomBytes(fp)
-          if (bytes) {
-            const header = parseINesHeader(bytes)
-            if (header) {
-              entry = {
-                ...entry,
-                mapper: header.mapper,
-                mapperInfo: getMapperInfo(header.mapper),
-                prgSize: header.prgRomSize,
-                chrSize: header.chrRomSize,
-                mirroring: header.mirroring,
-                valid: true,
+          for (const rom of extracted) {
+            const gameName = rom.name.replace(/\.(nes|fds|unf|unif|bin)$/i, '')
+
+            let entry: RomEntry = {
+              filePath: rom.filePath,
+              fileName: rom.name,
+              gameName,
+              gameNameEn: '',
+              mapper: -1,
+              mapperInfo: '未知',
+              prgSize: 0,
+              chrSize: 0,
+              mirroring: '',
+              valid: false,
+            }
+
+            try {
+              const bytes: Uint8Array | null = await api.readRomBytes(rom.filePath)
+              if (bytes) {
+                const header = parseINesHeader(bytes)
+                if (header) {
+                  entry = {
+                    ...entry,
+                    mapper: header.mapper,
+                    mapperInfo: getMapperInfo(header.mapper),
+                    prgSize: header.prgRomSize,
+                    chrSize: header.chrRomSize,
+                    mirroring: header.mirroring,
+                    valid: true,
+                  }
+                }
+              }
+            } catch (e) {
+              console.warn(`[CartridgeEditor] failed to parse ROM from zip: ${rom.name}`, e)
+            }
+
+            newEntries.push(entry)
+          }
+        } else {
+          // --- 直接选择 ROM 文件（原有逻辑） ---
+          const fileName = fp.split(/[\\/]/).pop() || fp
+          const gameName = fileName.replace(/\.(nes|fds|unf|unif|bin)$/i, '')
+
+          let entry: RomEntry = {
+            filePath: fp,
+            fileName,
+            gameName,
+            gameNameEn: '',
+            mapper: -1,
+            mapperInfo: '未知',
+            prgSize: 0,
+            chrSize: 0,
+            mirroring: '',
+            valid: false,
+          }
+
+          try {
+            const bytes: Uint8Array | null = await api.readRomBytes(fp)
+            if (bytes) {
+              const header = parseINesHeader(bytes)
+              if (header) {
+                entry = {
+                  ...entry,
+                  mapper: header.mapper,
+                  mapperInfo: getMapperInfo(header.mapper),
+                  prgSize: header.prgRomSize,
+                  chrSize: header.chrRomSize,
+                  mirroring: header.mirroring,
+                  valid: true,
+                }
               }
             }
+          } catch (e) {
+            console.warn(`[CartridgeEditor] failed to parse ROM: ${fileName}`, e)
           }
-        } catch (e) {
-          console.warn(`[CartridgeEditor] failed to parse ROM: ${fileName}`, e)
-        }
 
-        newEntries.push(entry)
+          newEntries.push(entry)
+        }
       }
 
       setRomEntries((prev) => [...prev, ...newEntries])
@@ -482,7 +537,7 @@ const CartridgeEditor: React.FC<CartridgeEditorProps> = ({
                 color: '#666',
               }}
             >
-              支持 .nes .fds .unf 格式，可多选
+              支持 .nes .fds .unf .unif .bin 及 .zip 压缩包，可多选
             </span>
           </div>
 

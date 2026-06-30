@@ -1,9 +1,11 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron'
-import { join } from 'path'
-import { readFile } from 'fs/promises'
+import { join, extname, basename } from 'path'
+import { readFile, mkdir, writeFile } from 'fs/promises'
+import { existsSync } from 'fs'
 import Store from 'electron-store'
 import { IPC_CHANNELS } from '../shared/types'
-import type { Cartridge, AppSettings } from '../shared/types'
+import type { Cartridge, AppSettings, ExtractedRomEntry } from '../shared/types'
+import AdmZip from 'adm-zip'
 import { is } from '@electron-toolkit/utils'
 import defaultCartridges from '../data/default-cartridges.json'
 
@@ -41,7 +43,12 @@ const store = new Store({
           up: 12, down: 13, left: 14, right: 15,
           a: 0, b: 1, start: 9, select: 8
         },
-        gamepadDeadzone: 0.3
+        gamepadDeadzone: 0.3,
+        turbo: {
+          up: false, down: false, left: false, right: false,
+          a: false, b: false, start: false, select: false
+        },
+        turboRate: 3
       },
       general: { language: 'zh-CN', autoSaveInterval: 60, theme: 'famicom' }
     } as AppSettings
@@ -110,7 +117,7 @@ function setupIPC(): void {
     const result = await dialog.showOpenDialog(mainWindow!, {
       title: '选择ROM文件',
       filters: [
-        { name: 'NES ROM', extensions: ['nes', 'fds', 'unf', 'unif'] },
+        { name: 'NES ROM / ZIP压缩包', extensions: ['nes', 'fds', 'unf', 'unif', 'bin', 'zip'] },
         { name: '所有文件', extensions: ['*'] }
       ],
       properties: ['openFile', 'multiSelections']
@@ -144,6 +151,69 @@ function setupIPC(): void {
   // 获取应用路径
   ipcMain.handle(IPC_CHANNELS.GET_APP_PATH, () => {
     return app.getPath('userData')
+  })
+
+  // 解压压缩包，提取 ROM 文件到 userData/rom-extract/
+  ipcMain.handle(IPC_CHANNELS.EXTRACT_ZIP, async (_event, zipPath: string): Promise<ExtractedRomEntry[] | null> => {
+    try {
+      const zip = new AdmZip(zipPath)
+      const entries = zip.getEntries()
+
+      // 支持的 ROM 文件扩展名
+      const romExts = ['.nes', '.fds', '.unf', '.unif', '.bin']
+      // 标准化 entryName：统一用正斜杠，处理 Windows 下创建 ZIP 时可能带反斜杠的情况
+      const romEntries = entries.filter((e) => {
+        if (e.isDirectory) return false
+        const name = e.entryName.replace(/\\/g, '/')
+        return romExts.includes(extname(name).toLowerCase())
+      })
+
+      if (romEntries.length === 0) {
+        console.warn('[main] EXTRACT_ZIP: no ROM files found in zip')
+        return []
+      }
+
+      // 提取目录：userData/rom-extract/{zip文件名}_{时间戳}/
+      const extractBase = join(app.getPath('userData'), 'rom-extract')
+      const zipName = basename(zipPath, extname(zipPath)).replace(/[^a-zA-Z0-9_\-]/g, '_')
+      const stamp = Date.now()
+      const outDir = join(extractBase, `${zipName}_${stamp}`)
+
+      if (!existsSync(outDir)) {
+        await mkdir(outDir, { recursive: true })
+      }
+
+      const results: ExtractedRomEntry[] = []
+
+      for (const entry of romEntries) {
+        // 标准化路径分隔符，兼容 Windows 下创建的 ZIP
+        const normalizedName = entry.entryName.replace(/\\/g, '/')
+        const outPath = join(outDir, normalizedName)
+        const parts = normalizedName.split('/')
+        const fileName = parts.pop() || normalizedName
+        const subDir = parts.join('/')
+
+        // 确保子目录存在
+        if (subDir) {
+          const dirPath = join(outDir, subDir)
+          if (!existsSync(dirPath)) {
+            await mkdir(dirPath, { recursive: true })
+          }
+        }
+        // 写入文件
+        await writeFile(outPath, entry.getData())
+        results.push({
+          name: fileName,
+          filePath: outPath,
+        })
+      }
+
+      console.log(`[main] EXTRACT_ZIP: extracted ${results.length} ROMs from ${zipName}`)
+      return results
+    } catch (err) {
+      console.error('[main] EXTRACT_ZIP failed:', err)
+      return null
+    }
   })
 
   // 读取 ROM 文件字节（用于 iNES 头解析）

@@ -80,6 +80,12 @@ export interface AppSettings {
   }
 }
 
+/** 压缩包中提取的 ROM 文件信息 */
+export interface ExtractedRomEntry {
+  name: string         // ROM 文件名（不含路径）
+  filePath: string     // 提取后的完整路径
+}
+
 /** IPC 通道定义 */
 export const IPC_CHANNELS = {
   // ROM管理
@@ -88,6 +94,7 @@ export const IPC_CHANNELS = {
   GET_ROM_INFO: 'rom:info',
   READ_ROM_BYTES: 'rom:read-bytes',
   LOAD_ROM_DATA: 'rom:load-data',
+  EXTRACT_ZIP: 'rom:extract-zip',  // 解压压缩包中的 ROM 文件
   // 卡带管理
   LOAD_CARTRIDGES: 'cartridge:load',
   SAVE_CARTRIDGES: 'cartridge:save',

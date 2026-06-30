@@ -12,6 +12,7 @@ interface ElectronAPI {
   selectROM: () => Promise<string[] | null>
   readRomBytes: (filePath: string) => Promise<Uint8Array | null>
   loadRomData: (filePath: string) => Promise<Uint8Array | null>
+  extractZip: (zipPath: string) => Promise<{ name: string; filePath: string }[] | null>
 
   // 设置
   getSettings: () => Promise<unknown>
