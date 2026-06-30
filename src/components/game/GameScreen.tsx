@@ -467,19 +467,32 @@ const GameScreen: React.FC = () => {
         background: '#000',
       }}
     >
-      {/* NES 画面 Canvas */}
-      <canvas
-        ref={canvasRef}
-        width={SCREEN_WIDTH}
-        height={SCREEN_HEIGHT}
+      {/* 4:3 比例容器（NES 标准显示比例） */}
+      <div
         style={{
           width: '100%',
           height: '100%',
-          objectFit: 'contain',
-          imageRendering: 'pixelated',
-          display: error ? 'none' : 'block',
+          maxWidth: 'calc(100vh * 4 / 3)',
+          maxHeight: 'calc(100vw * 3 / 4)',
+          aspectRatio: '4 / 3',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
-      />
+      >
+        {/* NES 画面 Canvas */}
+        <canvas
+          ref={canvasRef}
+          width={SCREEN_WIDTH}
+          height={SCREEN_HEIGHT}
+          style={{
+            width: '100%',
+            height: '100%',
+            imageRendering: 'pixelated',
+            display: error ? 'none' : 'block',
+          }}
+        />
+      </div>
 
       {/* 错误提示 */}
       {error && (
