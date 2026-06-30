@@ -231,6 +231,27 @@ function setupIPC(): void {
   // 读取完整 ROM 文件数据（用于 JSNES 加载运行）
   ipcMain.handle(IPC_CHANNELS.LOAD_ROM_DATA, async (_event, filePath: string) => {
     try {
+      // 如果路径指向 ZIP 文件，直接解压并返回第一个 ROM 的数据
+      const ext = extname(filePath).toLowerCase()
+      if (ext === '.zip') {
+        console.log(`[main] LOAD_ROM_DATA: file is ZIP, extracting inline...`)
+        const zip = new AdmZip(filePath)
+        const entries = zip.getEntries()
+        const romExts = ['.nes', '.fds', '.unf', '.unif', '.bin']
+        // 查找第一个 ROM 文件
+        for (const entry of entries) {
+          if (entry.isDirectory) continue
+          const name = entry.entryName.replace(/\\/g, '/')
+          if (romExts.includes(extname(name).toLowerCase())) {
+            const data = entry.getData()
+            console.log(`[main] LOAD_ROM_DATA: extracted "${name}" from ZIP, size=${data.length}`)
+            return new Uint8Array(data)
+          }
+        }
+        console.error(`[main] LOAD_ROM_DATA: no ROM found in ZIP: ${filePath}`)
+        return null
+      }
+
       const buffer = await readFile(filePath)
       return new Uint8Array(buffer)
     } catch (err) {
